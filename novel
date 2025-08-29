@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovelHub - Platform Menulis Novel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .editor-container { min-height: 500px; }
+        .novel-card:hover { transform: translateY(-2px); transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-lg border-b-4 border-purple-500">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">📚</span>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-800">NovelHub</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600">👤 Admin</span>
+                    <button onclick="showUploadModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        📤 Upload Dokumen
+                    </button>
+                    <button onclick="createNewNovel()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        ✍️ Novel Baru
+                    </button>
+                    <button onclick="handleLogout()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        🚪 Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        <!-- Dashboard View -->
+        <div id="dashboard" class="fade-in">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Novel Saya</h2>
+                <p class="text-gray-600">Kelola dan tulis novel Anda dengan mudah</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Total Novel</p>
+                            <p id="totalNovels" class="text-2xl font-bold text-gray-800">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">📖</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Total Kata</p>
+                            <p id="totalWords" class="text-2xl font-bold text-gray-800">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">✏️</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Terakhir Diedit</p>
+                            <p id="lastEdited" class="text-sm font-medium text-gray-800">-</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">🕒</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Novels Grid -->
+            <div id="novelsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Novel cards will be inserted here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="text-center py-16 hidden">
+                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="text-4xl">📝</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Belum Ada Novel</h3>
+                <p class="text-gray-600 mb-6">Mulai menulis novel pertama Anda atau upload dokumen yang sudah ada</p>
+                <div class="space-x-4">
+                    <button onclick="createNewNovel()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                        Tulis Novel Baru
+                    </button>
+                    <button onclick="showUploadModal()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                        Upload Dokumen
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor View -->
+        <div id="editor" class="hidden fade-in">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <!-- Editor Header -->
+                <div class="bg-gray-50 px-6 py-4 border-b flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <button onclick="backToDashboard()" class="text-gray-600 hover:text-gray-800 transition-colors">
+                            ← Kembali
+                        </button>
+                        <input id="novelTitle" type="text" placeholder="Judul Novel..." class="text-xl font-semibold bg-transparent border-none outline-none text-gray-800 placeholder-gray-500">
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span id="wordCount" class="text-sm text-gray-600">0 kata</span>
+                        <span id="saveStatus" class="text-sm text-green-600">✓ Tersimpan</span>
+                        <button onclick="downloadNovel()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                            📥 Download
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Editor Content -->
+                <div class="editor-container">
+                    <textarea id="novelContent" 
+                              placeholder="Mulai menulis novel Anda di sini..."
+                              class="w-full h-full min-h-[500px] p-6 border-none outline-none resize-none text-gray-800 leading-relaxed"
+                              style="font-size: 16px; line-height: 1.6;"></textarea>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Upload Dokumen Novel</h3>
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-4">
+                <input type="file" id="fileInput" accept=".txt,.doc,.docx" class="hidden" onchange="handleFileUpload(event)">
+                <div onclick="document.getElementById('fileInput').click()" class="cursor-pointer">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">📄</span>
+                    </div>
+                    <p class="text-gray-600 mb-2">Klik untuk pilih file</p>
+                    <p class="text-sm text-gray-500">Mendukung .txt, .doc, .docx</p>
+                </div>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="hideUploadModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-lg font-medium transition-colors">
+                    Batal
+                </button>
+                <button onclick="processUpload()" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg font-medium transition-colors">
+                    Upload
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="fixed inset-0 bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-white text-2xl">📚</span>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">NovelHub Admin</h2>
+                <p class="text-gray-600">Masuk untuk mengakses platform novel</p>
+            </div>
+            
+            <form onsubmit="handleLogin(event)" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                    <input type="text" id="username" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                           placeholder="Masukkan username">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="password" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                           placeholder="Masukkan password">
+                </div>
+                
+                <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105">
+                    Masuk
+                </button>
+            </form>
+            
+            <div id="loginError" class="hidden mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+                Username atau password salah!
+            </div>
+            
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                <p class="text-sm text-gray-600 text-center">
+                    <strong>Demo Login:</strong><br>
+                    Username: <code class="bg-gray-200 px-2 py-1 rounded">admin</code><br>
+                    Password: <code class="bg-gray-200 px-2 py-1 rounded">novel123</code>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let novels = JSON.parse(localStorage.getItem('novels')) || [];
+        let currentNovelId = null;
+        let saveTimeout = null;
+        let uploadedFile = null;
+        let isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthStatus();
+        });
+
+        // Authentication functions
+        function checkAuthStatus() {
+            if (isLoggedIn) {
+                showMainApp();
+            } else {
+                showLoginScreen();
+            }
+        }
+
+        function showLoginScreen() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.querySelector('header').style.display = 'none';
+            document.querySelector('main').style.display = 'none';
+        }
+
+        function showMainApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.querySelector('header').style.display = 'block';
+            document.querySelector('main').style.display = 'block';
+            loadDashboard();
+            updateStats();
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            // Demo credentials - in real app, this would be server-side validation
+            if (username === 'admin' && password === 'novel123') {
+                isLoggedIn = true;
+                localStorage.setItem('isLoggedIn', 'true');
+                errorDiv.classList.add('hidden');
+                showMainApp();
+                
+                // Clear form
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+            } else {
+                errorDiv.classList.remove('hidden');
+                // Auto-hide error after 3 seconds
+                setTimeout(() => {
+                    errorDiv.classList.add('hidden');
+                }, 3000);
+            }
+        }
+
+        function handleLogout() {
+            if (confirm('Apakah Anda yakin ingin logout?')) {
+                isLoggedIn = false;
+                localStorage.removeItem('isLoggedIn');
+                currentNovelId = null;
+                showLoginScreen();
+            }
+        }
+
+        // Dashboard functions
+        function loadDashboard() {
+            const novelsGrid = document.getElementById('novelsGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (novels.length === 0) {
+                novelsGrid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                novelsGrid.innerHTML = novels.map(novel => `
+                    <div class="novel-card bg-white rounded-xl shadow-md p-6 cursor-pointer border hover:shadow-lg transition-all" onclick="openNovel('${novel.id}')">
+                        <div class="flex items-start justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800 truncate">${novel.title || 'Novel Tanpa Judul'}</h3>
+                            <button onclick="event.stopPropagation(); deleteNovel('${novel.id}')" class="text-red-500 hover:text-red-700 text-sm">
+                                🗑️
+                            </button>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-3">${novel.content.substring(0, 150)}${novel.content.length > 150 ? '...' : ''}</p>
+                        <div class="flex items-center justify-between text-sm text-gray-500">
+                            <span>${novel.wordCount} kata</span>
+                            <span>${formatDate(novel.lastModified)}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalNovels').textContent = novels.length;
+            document.getElementById('totalWords').textContent = novels.reduce((total, novel) => total + novel.wordCount, 0);
+            
+            if (novels.length > 0) {
+                const lastModified = Math.max(...novels.map(novel => new Date(novel.lastModified).getTime()));
+                document.getElementById('lastEdited').textContent = formatDate(new Date(lastModified));
+            }
+        }
+
+        function createNewNovel() {
+            const newNovel = {
+                id: Date.now().toString(),
+                title: '',
+                content: '',
+                wordCount: 0,
+                createdAt: new Date().toISOString(),
+                lastModified: new Date().toISOString()
+            };
+            
+            novels.push(newNovel);
+            localStorage.setItem('novels', JSON.stringify(novels));
+            openNovel(newNovel.id);
+        }
+
+        function openNovel(novelId) {
+            currentNovelId = novelId;
+            const novel = novels.find(n => n.id === novelId);
+            
+            if (novel) {
+                document.getElementById('dashboard').classList.add('hidden');
+                document.getElementById('editor').classList.remove('hidden');
+                
+                document.getElementById('novelTitle').value = novel.title;
+                document.getElementById('novelContent').value = novel.content;
+                updateWordCount();
+                
+                // Auto-save setup
+                document.getElementById('novelTitle').addEventListener('input', autoSave);
+                document.getElementById('novelContent').addEventListener('input', autoSave);
+            }
+        }
+
+        function backToDashboard() {
+            document.getElementById('editor').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            currentNovelId = null;
+            loadDashboard();
+            updateStats();
+        }
+
+        function deleteNovel(novelId) {
+            if (confirm('Apakah Anda yakin ingin menghapus novel ini?')) {
+                novels = novels.filter(n => n.id !== novelId);
+                localStorage.setItem('novels', JSON.stringify(novels));
+                loadDashboard();
+                updateStats();
+            }
+        }
+
+        // Editor functions
+        function autoSave() {
+            clearTimeout(saveTimeout);
+            document.getElementById('saveStatus').textContent = '💾 Menyimpan...';
+            document.getElementById('saveStatus').className = 'text-sm text-yellow-600';
+            
+            saveTimeout = setTimeout(() => {
+                saveCurrentNovel();
+            }, 1000);
+        }
+
+        function saveCurrentNovel() {
+            if (!currentNovelId) return;
+            
+            const novel = novels.find(n => n.id === currentNovelId);
+            if (novel) {
+                novel.title = document.getElementById('novelTitle').value || 'Novel Tanpa Judul';
+                novel.content = document.getElementById('novelContent').value;
+                novel.wordCount = countWords(novel.content);
+                novel.lastModified = new Date().toISOString();
+                
+                localStorage.setItem('novels', JSON.stringify(novels));
+                updateWordCount();
+                
+                document.getElementById('saveStatus').textContent = '✓ Tersimpan';
+                document.getElementById('saveStatus').className = 'text-sm text-green-600';
+            }
+        }
+
+        function updateWordCount() {
+            const content = document.getElementById('novelContent').value;
+            const wordCount = countWords(content);
+            document.getElementById('wordCount').textContent = `${wordCount} kata`;
+        }
+
+        function countWords(text) {
+            return text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+        }
+
+        function downloadNovel() {
+            if (!currentNovelId) return;
+            
+            const novel = novels.find(n => n.id === currentNovelId);
+            if (novel) {
+                const content = `${novel.title}\n\n${novel.content}`;
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${novel.title || 'Novel'}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Upload functions
+        function showUploadModal() {
+            document.getElementById('uploadModal').classList.remove('hidden');
+        }
+
+        function hideUploadModal() {
+            document.getElementById('uploadModal').classList.add('hidden');
+            uploadedFile = null;
+            document.getElementById('fileInput').value = '';
+        }
+
+        function handleFileUpload(event) {
+            uploadedFile = event.target.files[0];
+        }
+
+        function processUpload() {
+            if (!uploadedFile) {
+                alert('Silakan pilih file terlebih dahulu');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const fileName = uploadedFile.name.replace(/\.[^/.]+$/, "");
+                
+                const newNovel = {
+                    id: Date.now().toString(),
+                    title: fileName,
+                    content: content,
+                    wordCount: countWords(content),
+                    createdAt: new Date().toISOString(),
+                    lastModified: new Date().toISOString()
+                };
+                
+                novels.push(newNovel);
+                localStorage.setItem('novels', JSON.stringify(novels));
+                
+                hideUploadModal();
+                loadDashboard();
+                updateStats();
+                
+                alert('Novel berhasil diupload!');
+            };
+            
+            reader.readAsText(uploadedFile);
+        }
+
+        // Utility functions
+        function formatDate(date) {
+            const d = new Date(date);
+            const now = new Date();
+            const diffTime = Math.abs(now - d);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 1) return 'Hari ini';
+            if (diffDays === 2) return 'Kemarin';
+            if (diffDays <= 7) return `${diffDays - 1} hari lalu`;
+            
+            return d.toLocaleDateString('id-ID', { 
+                day: 'numeric', 
+                month: 'short', 
+                year: 'numeric' 
+            });
+        }
+
+        // Auto-save on page unload
+        window.addEventListener('beforeunload', function() {
+            if (currentNovelId) {
+                saveCurrentNovel();
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'976896e827866bab',t:'MTc1NjQzNDIzOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
